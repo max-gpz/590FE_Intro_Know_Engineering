@@ -1,0 +1,348 @@
+---
+output: pdf_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+```
+
+
+
+# FE590.  Assignment #2
+# Gang Ping Zhu
+
+
+## `r format(Sys.time(), "%Y-%m-%d")`
+
+
+
+
+# Instructions
+In this assignment, you should use R markdown to answer the questions below. Simply type your R code into embedded chunks as shown above.
+When you have completed the assignment, knit the document into a PDF file, and upload both the .pdf and .Rmd files to Canvas.
+
+# Question 1 (based on JWHT Chapter 2, Problem 9)
+Use the Auto data set from the textbook's website. When reading the data, use the options as.is = TRUE
+and na.strings="?". Remove the unavailable data using the na.omit() function.
+
+```{r}
+setwd("C:/Users/gang.ping.m.zhu/OneDrive - Accenture/Stevens/FE 590")
+auto <- read.csv("Auto.csv", as.is = TRUE, na.strings = "?")
+auto <- na.omit(auto)
+head(auto)
+```
+
+
+## 1. List the names of the variables in the data set.
+
+```{r}
+colnames(auto)
+```
+
+
+## 2. The columns origin and name are unimportant variables. Create a new data frame called cars that contains none of these unimportant variables
+
+```{r}
+cars <- subset(auto, select = c(1,2,3,4,5,6,7))
+head(cars)
+```
+
+## 3. What is the range of each quantitative variable? Answer this question using the range() function with the sapply() function (e.g., sapply(cars, range). Print a simple table of the ranges of the variables. The rows should correspond to the variables. The first column should be the lowest value of the corresponding variable, and the second column should be the maximum value of the variable. The columns should be suitably labeled.
+
+```{r}
+rangecars <- sapply(cars, range)
+rangecars <- as.data.frame(rangecars)
+rangecars
+```
+
+## 4. What is the mean and standard deviation of each variable? Create a simple table of the means and standard deviations.
+
+```{r}
+meancars <- sapply(cars, mean)
+sdcars <- sapply(cars, sd)
+
+msd <- rbind(meancars, sdcars)
+msd
+```
+
+## 5. Create a scatterplot matrix that includes the variables mpg, displacement, horsepower, weight, and acceleration using the pairs() function.
+
+```{r}
+pairs(~ mpg + displacement + horsepower + weight + acceleration, data = cars)
+```
+
+## 6. From the scatterplot, it should be clear that mpg has an almost linear relationship to predictors, and higher-order relationships to other variables. Using the regsubsets function in the leaps library, regress mpg onto
+
+\begin{itemize}
+
+\item displacement
+\item displacement squared
+\item horsepower
+\item horsepower squared 
+\item weight
+\item weight squared
+\item acceleration
+
+\end{itemize}
+
+```{r}
+library("leaps")
+cars$displacement.squared <- cars$displacement^2
+cars$horsepower.squared <- cars$horsepower^2
+cars$weight.squared <- cars$weight^2
+a <- regsubsets(mpg~., data=cars)
+a
+```
+
+Print a table showing what variables would be selected using best subset selection for all model orders.
+
+```{r}
+summary(a)
+t(summary(a)$which)
+```
+
+What is the most important variable affecting fuel consumption?
+
+```{r}
+# weight
+```
+
+What is the second most important variable affecting fuel consumption?
+
+```{r}
+# year
+```
+
+What is the third most important variable affecting fuel consumption?
+
+```{r}
+# horsepower
+```
+
+## 7. Plot a graph showing Mallow's Cp as a function of the order of the model. Which model is the best?
+
+
+
+```{r}
+cp=summary(a)$cp
+i=which.min(cp)
+plot(cp,type='b',col="blue",xlab="Number of Predictors",ylab=expression("Mallows C"[P]))
+points(i,cp[i],pch=19,col="red")
+```
+Based on the chart above, we can see that our last model is best out of the subset of predictors. The small value of C[P] means that the model is relatively precise. 
+
+
+# Question 2 (based on JWHT Chapter 3, Problem 10)
+
+This exercise involves the Boston housing data set.
+
+## 1. Load in the Boston data set, which is part of the MASS library in R. The data set is contained in the object Boston. Read about the data set using the command ?Boston. How many rows are in this data set? How many columns? What do the rows and columns represent?
+
+```{r}
+library("MASS")
+names(Boston)
+?Boston
+```
+The Boston data frame has 506 rows and 14 columns.The rows represent housing values in the suburbs of Boston. The columns represent different attributes of the suburbs of Boston. They are represented by the following:
+
+* crim - per capita crime rate by town.
+* zn - proportion of residential land zoned for lots over 25,000 sq.ft.
+* indus - proportion of non-retail business acres per town.
+* chas - Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+* nox - nitrogen oxides concentration (parts per 10 million).
+* rm - average number of rooms per dwelling.
+* age - proportion of owner-occupied units built prior to 1940.
+* dis - weighted mean of distances to five Boston employment centres.
+* rad - index of accessibility to radial highways.
+* tax - full-value property-tax rate per \$10,000.
+* ptratio - pupil-teacher ratio by town.
+* black - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+* lstat - lower status of the population (percent).
+* medv - median value of owner-occupied homes in \$1000s.
+
+## 2. Do any of the suburbs of Boston appear to have particularly high crime rates?
+
+Based on the chart below, there are a few areas where crime seems to be particularly high. 
+
+```{r}
+attach(Boston)
+summary(Boston$crim)
+plot(Boston$crim, ylab = "Per capita crime rate by town")
+```
+
+
+Tax rates?
+Based on the chart below, we can see there are a few areas where tax seems to be particularly high. It's placed on same areas where the crime rate is high.
+
+```{r}
+summary(Boston$tax)
+plot(Boston$tax, ylab = "Full-value property-tax rate per $10,000")
+```
+
+Pupil-teacher ratios?
+Based on the chart below, we can see there are a few areas where pupil to teacher ratio seems to be high. Unlike the high crime rate and high tax rate, the same places that have high crime and high tax also seem to have a high pupil to teacher ratio but unlike those two attributes, there also seem to be other areas that have a high pupil to teacher ratio that don't exhibit high tax or high crime.
+
+```{r}
+summary(Boston$ptratio)
+plot(Boston$ptratio, ylab = "Pupil-teacher ratio by town")
+```
+
+Comment on the range of each predictor.
+While there is a range for the crime rate, most of the values for crime are pretty low with a portion of it being disparate from the rest. The tax rate seems to follow a similar pattern but it shows a bit more diversity with a spike in tax in the area where crime is high. As for the puil-teacher ratio, that range is very diverse even though we see a spike in the same area as the high tax and crime rate
+
+## 3. How many of the suburbs in this data set bound the Charles river?
+
+```{r}
+table(Boston$chas)
+```
+There are 35 suburbs where tract bounds the Charles river. 
+
+
+## 4. What is the median pupil-teacher ratio among the towns in this data set?
+
+```{r}
+median(Boston$ptratio)
+```
+
+
+## 5. In this data set, how many of the suburbs average more than seven rooms per dwelling?
+
+```{r}
+table(Boston$rm > 7)
+```
+There are 64 suburbs that average more than seven rooms per dwelling
+
+More than eight rooms per dwelling?
+
+```{r}
+table(Boston$rm > 8)
+```
+There are 13 suburbs that average than eight rooms per dwelling. 
+
+Comment on the suburbs that average more than eight rooms per dwelling.
+
+```{r}
+rms8 <- subset.data.frame(Boston, rm > 8)
+summary(rms8)
+```
+
+These suburbs don't have much crime and are not taxed at the highest level. There are a good percentage of homes in these suburbs that are built prior to 1940. 
+
+# Question 3 (based on JWHT Chapter 4, Problem 10)
+
+This question should be answered using the Weekly data set, which is part of the ISLR package. This data contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+
+## 1. What does the data represent?
+
+```{r}
+library("ISLR")
+attach(Weekly)
+?Weekly
+```
+This Weekly data represents the weekly percentage returns for the S&P 500 stock index between 1990 and 2010.
+
+
+## 2. Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?
+
+```{r}
+logregweekly <- glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume, family=binomial, data=Weekly)
+summary(logregweekly)
+```
+
+Yes, there appears to be a significant Coefficient. Lag2 appears to be statistically significant.
+
+
+## 3. Fit a logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+
+
+```{r}
+library(class)
+trainweekly <- subset(Weekly, Year < 2009)
+otherweekly <- subset(Weekly, Year > 2008)
+glm.fit=glm(Direction~Lag2,family=binomial,data=trainweekly)
+summary(glm.fit)
+
+glm.fit=glm(Direction~Lag2,family=binomial,data=otherweekly)
+glm.probs=predict(glm.fit,type="response")
+glm.pred=rep("Down",104)
+glm.pred[glm.probs>.5]="Up"
+table(glm.pred,otherweekly$Direction)
+```
+
+## 4. Repeat Part 3 using LDA.
+
+```{r}
+lda.fit=lda(Direction~Lag2,data=trainweekly)
+summary(lda.fit)
+
+lda.fit <- lda(Direction~Lag2,data=otherweekly)
+lda.pred <- predict(lda.fit,otherweekly)
+lda.class <- lda.pred$class
+table(lda.class,otherweekly$Direction)
+```
+
+
+## 5. Repeat Part 3 using QDA.
+
+```{r}
+qda.fit <- qda(Direction~Lag2,data=trainweekly)
+summary(qda.fit)
+
+qda.fit <- qda(Direction~Lag2,data=otherweekly)
+qda.class <- predict(qda.fit,otherweekly)$class
+table(qda.class,otherweekly$Direction)
+```
+
+## 6. Repeat Part 3 using KNN with K = 1, 2, 3. (Fit a logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010))
+
+```{r}
+train.X <- as.data.frame(trainweekly$Lag2)
+test.X <- as.data.frame(otherweekly$Lag2)
+train.Direction=trainweekly$Direction
+
+set.seed(1)
+knn.pred=knn(train.X,test.X,train.Direction, k=1)
+table(knn.pred,otherweekly$Direction)
+
+knn.pred=knn(train.X,test.X,train.Direction, k=2)
+table(knn.pred,otherweekly$Direction)
+
+knn.pred=knn(train.X,test.X,train.Direction, k=3)
+table(knn.pred,otherweekly$Direction)
+```
+
+
+## 7. Which of these methods in Parts 3, 4, 5, and 6 appears to provide the best results on this data?
+
+```{r}
+#QDA appears to have the best results out of the different methods with a 63% accuracy. 
+```
+
+
+# Question 4
+
+## Write a function that works in R to gives you the parameters from a linear regression on a data set between two sets of values (in other words you only have to do the 2-D case).  Include in the output the standard error of your variables.  You cannot use the lm command in this function or any of the other built in regression models.  For example your output could be a 2x2 matrix with the parameters in the first column and the standard errors in the second column.  For up to 5 bonus points, format your output so that it displays and operates similar in function to the output of the lm command.(i.e. in a data frame that includes all potentially useful outputs)
+
+
+```{r}
+#y=X??+??
+#?????N(0,(??^2)I)
+lnreg <- function(x, y){
+  x1 <- as.matrix(x)
+  y1 <- cbind(constant = 1, as.matrix(y))
+  vb <- solve(t(y1)%*%y1, t(y1)%*%x1)
+  ds <- sum((x1 - y1%*%vb)^2)/(nrow(y1)-ncol(x1))
+  StdErrors <- sqrt(diag(ds*chol2inv(chol(t(y1)%*%y1))))
+  res <- cbind(vb, StdErrors)
+  print(res)
+}
+```
+
+## Compare the output of your function to that of the lm command in R.
+
+```{r}
+lnreg(Lag1, Lag2)
+testlm <- lm(Lag1 ~ Lag2, data = Weekly)
+testlm
+summary(testlm)
+```
